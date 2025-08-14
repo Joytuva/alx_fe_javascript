@@ -1,20 +1,16 @@
-// Keys for local storage
 const QUOTES_KEY = "quotes";
 const SELECTED_CATEGORY_KEY = "selectedCategory";
 const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
 
-// Load quotes from localStorage or initialize
 let quotes = JSON.parse(localStorage.getItem(QUOTES_KEY)) || [
     { text: "The best way to get started is to quit talking and begin doing.", category: "Motivation" },
     { text: "Don't let yesterday take up too much of today.", category: "Inspiration" }
 ];
 
-// Display a random quote
 function displayQuote(quote) {
     document.getElementById("quoteDisplay").textContent = quote.text;
 }
 
-// Populate category dropdown
 function populateCategories() {
     const categorySelect = document.getElementById("categoryFilter");
     categorySelect.innerHTML = '<option value="all">All Categories</option>';
@@ -32,7 +28,6 @@ function populateCategories() {
     }
 }
 
-// Filter quotes based on category
 function filterQuotes() {
     const selectedCategory = document.getElementById("categoryFilter").value;
     localStorage.setItem(SELECTED_CATEGORY_KEY, selectedCategory);
@@ -46,7 +41,6 @@ function filterQuotes() {
     }
 }
 
-// Add a new quote
 async function addQuote() {
     const text = document.getElementById("newQuote").value.trim();
     const category = document.getElementById("newCategory").value.trim();
@@ -60,7 +54,6 @@ async function addQuote() {
     }
 }
 
-// POST quote to server
 async function sendQuoteToServer(quote) {
     try {
         const response = await fetch(SERVER_URL, {
@@ -77,14 +70,12 @@ async function sendQuoteToServer(quote) {
     }
 }
 
-// Fetch quotes from server and resolve conflicts
 async function fetchQuotesFromServer() {
     try {
         const response = await fetch(SERVER_URL);
         const serverQuotes = await response.json();
         console.log("Fetched from server:", serverQuotes);
 
-        // Conflict resolution: server takes precedence
         let serverData = serverQuotes.map(item => ({
             text: item.title || item.text,
             category: item.category || "General"
@@ -99,12 +90,18 @@ async function fetchQuotesFromServer() {
     }
 }
 
-// Auto-sync every 30 seconds
-setInterval(fetchQuotesFromServer, 30000);
+async function syncQuotes() {
+    console.log("Syncing quotes...");
+    await fetchQuotesFromServer();
+    for (let localQuote of quotes) {
+        await sendQuoteToServer(localQuote);
+    }
+}
 
-// Init on DOM ready
+setInterval(syncQuotes, 30000);
+
 document.addEventListener("DOMContentLoaded", () => {
     populateCategories();
     filterQuotes();
-    fetchQuotesFromServer();
+    syncQuotes();
 });
