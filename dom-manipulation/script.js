@@ -96,6 +96,7 @@ async function syncQuotes() {
     for (let localQuote of quotes) {
         await sendQuoteToServer(localQuote);
     }
+    alert("Quotes synced with server!");
 }
 
 setInterval(syncQuotes, 30000);
